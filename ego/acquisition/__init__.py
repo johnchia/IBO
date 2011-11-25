@@ -309,14 +309,17 @@ def cdirectGP(model, bounds, maxiter, maxtime, maxsample, acqfunc=None, xi=-1, b
         if acqfunc=='ei':
             acquisition=0
             parm = xi
+            acqfunc_obj = EI(model, xi, **kwargs)
         elif acqfunc=='pi':
             acquisition=1
             parm = xi
+            acqfunc_obj = PI(model, xi, **kwargs)
         elif acqfunc=='ucb':
             acquisition=2
             t = len(model.Y)+1
             NA = len(bounds)
             parm = sqrt(scale * 2.0*log(t**(NA/2+2) * pi**2 / (3.0*delta)))
+            acqfunc_obj = UCB(model, len(bounds), delta=delta, scale=scale, **kwargs)
         else:
             raise NotImplementedError('unknown acquisition function %s'%acqfunc)
             
@@ -333,7 +336,7 @@ def cdirectGP(model, bounds, maxiter, maxtime, maxsample, acqfunc=None, xi=-1, b
             raise NotImplementedError('kernel not implemented in C++: %s'%model.kernel.__class__)
 
         lpath = ctypes.util.find_library('ego')
-        while lpath is None:
+        if lpath is None:
             for lp in ['/global/home/eric/EGOcode/cpp/libs/libego.so', '/Users/eric/Dropbox/EGOcode/ego/libs/libego.so']:
                 if os.path.exists(lp):
                     lpath = lp
@@ -446,14 +449,15 @@ def cdirectGP(model, bounds, maxiter, maxtime, maxsample, acqfunc=None, xi=-1, b
         libc.free.restype = None
         libc.free(result)
         
-    except:
+    except Exception as inst:
+        print '[python] C++ MaxEI threw exception:\n%s' % inst
         try:
             print '[python] C++ MaxEI implementation unavailable, attempting C++ DIRECT on Python objective function.'
-            opt, optx = cdirect(ei.negf, bounds, maxiter=maxiter, maxtime=maxtime, maxsample=maxsample, **kwargs)
+            opt, optx = cdirect(acqfunc_obj.negf, bounds, maxiter=maxiter, maxtime=maxtime, maxsample=maxsample, **kwargs)
         except:
             # couldn't access cDIRECT, use Python DIRECT
             print '[python] C++ DIRECT unavailable, attempting Python DIRECT'
-            opt, optx = direct(ei.negf, bounds, maxiter=maxiter, maxtime=maxtime, maxsample=maxsample, **kwargs)
+            opt, optx = direct(acqfunc_obj.negf, bounds, maxiter=maxiter, maxtime=maxtime, maxsample=maxsample, **kwargs)
         opt = -opt
     
     if False:
@@ -466,7 +470,7 @@ def cdirectGP(model, bounds, maxiter, maxtime, maxsample, acqfunc=None, xi=-1, b
                 opt = -ei.negf(s)
                 optx = s
     return opt, optx
-        
+
         
 def test():
     

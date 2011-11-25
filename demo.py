@@ -95,7 +95,8 @@ def demoObservations():
     
     figure(1, figsize=(5, 10))
     while True:
-        _, optx = maximizeEI(GP, bound, xi=.1)
+        _, optx = maximizeEI(GP, bound, xi=.1, useCDIRECT=False)
+        print "X"
 
         # visualize the mean, variance and expected improvement functions on 
         # the free parameters
@@ -194,6 +195,6 @@ def demoPrefGallery():
     
 
 if __name__ == '__main__':
-    demoObservations()
-    # demoPrefGallery()
+    #demoObservations()
+    demoPrefGallery()
 

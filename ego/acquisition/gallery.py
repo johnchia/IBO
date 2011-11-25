@@ -39,7 +39,7 @@ from ego.acquisition import UCB, EI, maximizeEI
 
 DEBUG = False
 
-def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True):
+def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True, xi=0):
     """
     Use UCB to generate a gallery of N instances using Monte Carlo to 
     approximate the optimization of the utility function.
@@ -95,16 +95,16 @@ def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True):
         bestUCB = -inf
         bestX = None
         # ut = UCB(hallucGP, len(bounds), N)
-        ut = EI(hallucGP, xi=.4)
+        ut = EI(hallucGP, xi=xi)
         
         if DEBUG: print '\tget with max EI'
-        opt, optx = maximizeEI(hallucGP, bounds, xi=.3, useCDIRECT=useCDIRECT)
-        if len(gallery)==0 or min(norm(optx-gx) for gx in gallery) > .5:
-            if DEBUG: print '\tgot one'
-            bestUCB = opt
-            bestX = optx
-        else:
-            if DEBUG: print '\ttoo close to existing'
+        opt, optx = maximizeEI(hallucGP, bounds, xi=xi, useCDIRECT=useCDIRECT)
+        #if len(gallery)==0 or min(norm(optx-gx) for gx in gallery) > .5:
+        #    if DEBUG: print '\tgot one'
+        bestUCB = opt
+        bestX = optx
+        #else:
+        #    if DEBUG: print '\ttoo close to existing'
         
         # try some random samples
         if DEBUG: print '\ttry random samples'
