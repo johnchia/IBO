@@ -22,7 +22,7 @@
 DIRS	= cpp
 ECHO	= echo
 
-all : force_look
+all : depend force_look
 	$(ECHO) looking into subdir .
 	-for d in $(DIRS); do (cd $$d; $(MAKE) ); done
 
