@@ -39,7 +39,7 @@ from ego.acquisition import UCB, EI, maximizeEI
 
 DEBUG = False
 
-def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True, xi=0):
+def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True, xi=0, passback={}):
     """
     Use UCB to generate a gallery of N instances using Monte Carlo to 
     approximate the optimization of the utility function.
@@ -105,7 +105,7 @@ def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True, xi
         bestX = optx
         #else:
         #    if DEBUG: print '\ttoo close to existing'
-        
+        '''        
         # try some random samples
         if DEBUG: print '\ttry random samples'
         for x in lhcSample(bounds, samples):
@@ -114,6 +114,7 @@ def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True, xi
                 '\they, this one is even better!'
                 bestUCB = u
                 bestX = x
+                passback['found_random'] = 1
         
         # now try the prior means
         if hallucGP.prior is not None:
@@ -128,9 +129,15 @@ def fastUCBGallery(GP, bounds, N, useBest=True, samples=300, useCDIRECT=True, xi
                         if DEBUG: print '\tthis one is even better!  prior mean %s has u = %f' % (x, u)
                         bestUCB = u
                         bestX = x
+                        passback['found_prior'] = 1
+        '''
                     
         gallery.append(bestX)
-        
-        hallucGP.addData(bestX, hallucGP.mu(bestX))
+        if len(gallery) < N-1:
+            hallucGP.addData(bestX, hallucGP.mu(bestX))
+
+    # these can be optionally passed back if the caller passes in its own dict
+    passback['hallucGP'] = hallucGP
+    passback['utility'] = ut
         
     return gallery
